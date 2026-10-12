@@ -1,0 +1,17 @@
+{
+  "name": "cc-stretch-dev",
+  "private": true,
+  "type": "module",
+  "description": "Tools around the plugin: its tests, the benchmark and the film. The plugin itself needs none of this.",
+  "scripts": {
+    "test": "claude plugin validate . && claude plugin test .",
+    "typecheck": "tsc -p bench/tsconfig.json",
+    "bench:report": "node bench/report.ts",
+    "film": "node film/compose.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.6.0",
+    "playwright": "1.62.0",
+    "typescript": "5.9.3"
+  }
+}

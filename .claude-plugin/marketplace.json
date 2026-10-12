@@ -1,0 +1,5 @@
+{
+  "name": "cc-stretch",
+  "owner": { "name": "pro-vi" },
+  "plugins": [{ "name": "cc-stretch", "source": "./" }]
+}

@@ -1,0 +1,621 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>cc-stretch film</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Press+Start+2P&display=block">
+<style>
+	:root {
+		--cream: #f4f1ea; --ink: #1f1e1b; --muted: #77736a; --orange: #d97757;
+		--paper: #efe6d2; --sepia: #4a3b28; --term: #191816; --term-fg: #e8e5de; --link: #8cc1f0;
+		--serif: 'Newsreader', Georgia, serif; --sans: 'Inter', -apple-system, sans-serif;
+		--mono: 'JetBrains Mono', ui-monospace, monospace; --type: 'Courier Prime', Courier, monospace;
+	}
+	html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--cream); }
+	#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--cream); color: var(--ink); }
+	.layer { position: absolute; inset: 0; opacity: 0; }
+
+	/* Cream cards: one serif statement, an optional small line. */
+	#card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+	#card .kicker { font: 500 22px/1 var(--sans); letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-bottom: 34px; }
+	#card .big { font: 400 92px/1.08 var(--serif); letter-spacing: -.015em; max-width: 1500px; }
+	#card .small { margin-top: 30px; font: 400 32px/1.4 var(--sans); color: var(--muted); }
+	#card .mono { margin-top: 44px; font: 400 30px/1 var(--mono); color: var(--ink); background: #e9e4d8; padding: 18px 26px; border-radius: 10px; }
+	#card .fine { margin-top: 40px; font: 400 22px/1.5 var(--sans); color: var(--muted); max-width: 1200px; }
+	#card.chip .big, #card.chip .small, #card.chip .fine { font-family: 'Press Start 2P', monospace; }
+	#card.chip .big { font-size: 44px; line-height: 1.5; }
+	#card.chip .small { font-size: 22px; line-height: 1.8; color: var(--ink); }
+	#card.chip .fine { font-size: 15px; line-height: 2; max-width: 1600px; }
+	/* The benchmark card: a reply folds into its skim beside the claim. */
+	#card .fold { display: flex; align-items: center; gap: 130px; }
+	#card .reply { position: relative; width: 520px; height: 642px; padding: 40px 44px; background: var(--term); border-radius: 18px; box-shadow: 0 30px 80px rgba(30,20,10,.22); }
+	#card .reply i { position: absolute; left: 44px; height: 11px; border-radius: 6px; background: #6b675f; }
+	#card .reply i b { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: var(--link); }
+	#card .claim { text-align: left; max-width: 760px; }
+	#card .claim .small { max-width: 640px; }
+	/* The closing card: what to type, in the cartridge font. */
+	#card.chip { padding-top: 120px; box-sizing: border-box; }
+	#card.chip ol { margin: 44px 0 0; padding: 0; list-style: none; text-align: left; font: 400 20px/2.5 'Press Start 2P', monospace; }
+	#card.chip ol span { color: var(--orange); margin-right: 24px; }
+	#card.chip .repo { margin-top: 36px; font: 400 22px/1 'Press Start 2P', monospace; }
+
+	/* 1967: typewriter on paper. */
+	#paper { background: var(--paper); color: var(--sepia); }
+	#paper::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(80,55,20,.28)); }
+	#paper .year { position: absolute; left: 160px; top: 140px; font: 700 34px/1 var(--type); letter-spacing: .18em; }
+	#paper .who { position: absolute; left: 160px; top: 192px; font: 400 26px/1 var(--type); opacity: .8; }
+	#paper .line { position: absolute; left: 160px; right: 160px; top: 420px; font: 400 54px/1.45 var(--type); }
+	#nelson, #measure { position: absolute; left: 160px; top: 360px; width: 1460px; font: 400 58px/1.5 var(--type); color: var(--sepia); }
+	#nelson span { white-space: pre; }
+	#nelson span.new, #nelson span.old { display: inline-block; overflow: hidden; vertical-align: bottom; }
+	#nelson span.new { font-weight: 700; }
+	#measure { visibility: hidden; top: 0; white-space: pre; }
+	#throttle { position: absolute; right: 150px; top: 330px; width: 60px; height: 420px; }
+	#throttle .track { position: absolute; left: 26px; top: 0; bottom: 0; width: 8px; background: rgba(74,59,40,.25); border-radius: 4px; }
+	#throttle .knob { position: absolute; left: 0; width: 60px; height: 34px; border-radius: 8px; background: var(--sepia); box-shadow: 0 4px 0 rgba(0,0,0,.18); }
+	#throttle .label { position: absolute; top: 440px; left: -40px; width: 140px; text-align: center; font: 700 18px/1.2 var(--type); letter-spacing: .2em; }
+	#paper .note { position: absolute; left: 160px; bottom: 120px; font: 400 26px/1.4 var(--type); opacity: .8; }
+
+	/* Archive: photographs and film from Brown University, graded and slowly pushed in. */
+	#archive { background: #0d0c0a; }
+	#archive img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; transform-origin: 50% 50%; filter: grayscale(1) sepia(.35) contrast(1.08) brightness(.92); }
+	#archive::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55)), linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.35) 32%, transparent 55%); }
+	#archive .over { position: absolute; left: 140px; bottom: 170px; z-index: 2; color: #f4efe4; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+	#archive .over .big { font: 400 88px/1.05 var(--serif); letter-spacing: -.015em; }
+	#archive .over .small { margin-top: 22px; font: 400 30px/1.4 var(--sans); opacity: .9; }
+	#archive .credit { position: absolute; right: 40px; bottom: 30px; z-index: 2; font: 400 15px/1.3 var(--sans); color: rgba(244,239,228,.75); }
+	#paper .portrait { position: absolute; left: 160px; top: 140px; width: 150px; height: 150px; border-radius: 50%; object-fit: cover; filter: grayscale(1) sepia(.4); box-shadow: 0 6px 20px rgba(60,40,10,.25); }
+	#paper .portrait-credit { position: absolute; left: 330px; top: 196px; font: 400 18px/1.4 var(--type); opacity: .75; }
+
+	/* The terminal: a recorded Claude Code screen, drawn cell by cell. */
+	#term-wrap { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+	#term { position: relative; background: var(--term); border-radius: 18px; box-shadow: 0 30px 80px rgba(30,20,10,.28), 0 0 0 1px rgba(0,0,0,.4); overflow: hidden; }
+	#term .bar { height: 46px; display: flex; align-items: center; gap: 10px; padding-left: 20px; background: #24221f; }
+	#term .bar i { width: 14px; height: 14px; border-radius: 50%; background: #4a4640; display: block; }
+	#term .bar span { margin-left: 18px; font: 500 17px/1 var(--sans); color: #8d877d; }
+	#term { width: 1476px; }
+	#rows { position: relative; width: 1440px; height: 990px; margin: 14px 18px 18px; font: 400 24px/1 var(--mono); color: var(--term-fg); }
+	#rows .row { position: absolute; left: 0; height: 33px; width: 100%; white-space: pre; }
+	#rows .row span { position: absolute; top: 4px; }
+	#caption { position: absolute; left: 0; right: 0; top: 0; z-index: 5; padding: 52px 0 46px; text-align: center; font: 500 46px/1.2 var(--sans); letter-spacing: -.01em; color: var(--ink);
+		background: linear-gradient(var(--cream) 78%, rgba(244, 241, 234, 0)); }
+	#caption small { display: block; margin-top: 10px; font: 400 26px/1.3 var(--sans); color: var(--muted); }
+
+	#pointer { position: absolute; left: 0; top: 0; width: 34px; height: 34px; opacity: 0; z-index: 8; }
+	#ring { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border: 4px solid var(--orange); border-radius: 50%; opacity: 0; z-index: 7; }
+	#clawd { position: absolute; left: 0; top: 0; image-rendering: pixelated; z-index: 9; }
+	#bubble { position: absolute; z-index: 10; font: 400 18px/1.5 'Press Start 2P', monospace; background: #fff; border: 4px solid var(--ink); padding: 14px 18px; opacity: 0; white-space: nowrap; }
+	#fade { position: absolute; inset: 0; background: var(--cream); opacity: 0; z-index: 20; pointer-events: none; }
+	#flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 21; }
+	#grain { position: absolute; inset: -50%; z-index: 30; opacity: .05; pointer-events: none;
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+</style>
+<div id="stage">
+	<div id="card" class="layer"></div>
+	<div id="archive" class="layer"><img id="arcA" alt=""><img id="arcB" alt=""><div class="over"><div class="big"></div><div class="small"></div></div><div class="credit"></div></div>
+	<div id="paper" class="layer"><img class="portrait" alt=""><div class="portrait-credit"></div><div class="year"></div><div class="who"></div><div class="line"></div><div id="measure"></div><div id="nelson"></div>
+		<div id="throttle"><div class="track"></div><div class="knob"></div><div class="label">THROTTLE</div></div><div class="note"></div></div>
+	<div id="termlayer" class="layer">
+		<div id="caption"></div>
+		<div id="term-wrap"><div id="term"><div class="bar"><i></i><i></i><i></i><span>claude</span></div><div id="rows"></div></div></div>
+	</div>
+	<div id="ring"></div>
+	<svg id="pointer" viewBox="0 0 24 24"><path d="M3 2 L3 20 L8 15 L11.5 22 L14.5 20.6 L11 13.8 L18 13.8 Z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>
+	<canvas id="clawd" width="14" height="8"></canvas>
+	<div id="bubble"></div>
+	<div id="fade"></div>
+	<div id="flash"></div>
+	<div id="grain"></div>
+</div>
+<script>
+// Everything on screen is a function of the film's time: setState({ t }) draws that instant.
+// compose.mjs injects window.TAKE ({ frames: [{ t, rows }], marks }) and the bundled growth
+// code (window.Grow) before the first call.
+const W = 1920, H = 1080, COLS = 100, ROWS = 30, CELL_W = 14.4, CELL_H = 33;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (k) => (k < .5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+const lerp = (a, b, k) => a + (b - a) * k;
+const span = (t, a, b) => clamp((t - a) / (b - a));
+const $ = (id) => document.getElementById(id);
+
+// The words on screen. The 1967 lines are Ted Nelson's own example of stretchtext.
+const COPY = {
+	hookTitle: 'You asked a yes-or-no question.',
+	hookSmall: 'Claude answered in 1,400 words.',
+	turn1: 'There is an older idea.',
+	turn1small: 'Older than the web.',
+	archiveLine: 'Brown University, 1969: reading hypertext with a light pen.',
+	archiveCredit: 'Photos: Gregory Lloyd, CC BY-SA 4.0, via Wikimedia Commons',
+	fressLine: 'Brown University, 1976: a light pen opens linked text in FRESS.',
+	fressCredit: '“Hypertext” (1976), Andries van Dam, Brown University. Internet Archive, CC BY-NC-SA 4.0',
+	portraitCredit: 'Ted Nelson, 2010. Photo: Beatrice Murch, CC BY 2.0, via Wikimedia Commons',
+	year: '1967',
+	who: 'Ted Nelson, Hypertext Note 8',
+	nelson: [
+		['Stretchtext is a form of writing.', 'Stretchtext, a kind of hypertext, is basically a form of writing closely related to other prose.'],
+		['It gets longer and shorter on demand.', 'Stretchtext gets longer, by adding words and phrases, or shorter, by subtracting words and phrases, on demand.'],
+	],
+	nelsonNote: 'Ted Nelson’s own example, printed in 1970',
+	quote: '“Gaps appear between phrases; new words and phrases pop into the gaps, an item at a time.”',
+	quoteBy: 'Ted Nelson, 1970',
+	never: 'It never caught on.',
+	neverSmall: 'Someone had to write every level by hand.',
+	clawdSays: 'I don’t mind.',
+	statBig: '83% less to read.',
+	statSmall: 'Replies arrive short. The rest opens where you click.',
+	productKicker: 'Introducing',
+	product: 'cc-stretch',
+	tagline: 'Progressive attention for Claude Code.',
+	install: '/plugin install cc-stretch --marketplace pro-vi/cc-stretch',
+	lineage: 'Stretchtext, 1967  →  your terminal, 2026',
+	howTo: 'How to play',
+	howSteps: ['/plugin install cc-stretch --marketplace pro-vi/cc-stretch', '/tui fullscreen', 'Click a linked phrase. Click « to shrink it.'],
+	repo: 'github.com/pro-vi/cc-stretch',
+	parodyFine: 'Clawd belongs to Anthropic. Stretchtext belongs to Ted Nelson. The bugs are ours.',
+	parodyCredits: 'Archive: photos by Gregory Lloyd (CC BY-SA 4.0) and Beatrice Murch (CC BY 2.0), via Wikimedia Commons.',
+};
+
+// A reply that will not stop, for the opening.
+const WALL = [
+	'Great question! The short answer is yes. The long answer, however, deserves some context.', '',
+	'## Background', '', 'Before we can say yes with confidence, it helps to understand the history of the problem,',
+	'the assumptions behind it, and the three schools of thought that have shaped how we approach it.', '',
+	'### 1. The historical view', '', 'In the early days, most teams simply said yes. Over time, however, a more nuanced',
+	'picture emerged, and it is worth walking through each stage of that evolution in some detail.', '',
+	'### 2. Considerations', '', '- **Performance.** Saying yes is fast, but it has implications.', '- **Readability.** A yes should be clear. Here is how to make it clear.',
+	'- **Edge cases.** What if the answer is yes, but only on Tuesdays?', '- **Team norms.** Some teams prefer "affirmative" over "yes".', '',
+	'### 3. A worked example', '', '```', 'if (question.isYesOrNo) {', '  return explainEverything(question) // see below', '}', '```', '',
+	'### 4. Alternatives you might consider', '', 'You could also say "no", "maybe", or "it depends". Each has trade-offs:', '',
+	'| Answer | Pros | Cons |', '|--------|------|------|', '| yes    | short | too short |', '| no     | honest | rude? |', '', '### 5. Summary', '',
+	'In summary, the answer is yes, with the caveats above, the considerations below, and', 'the follow-up questions in the appendix.', '', '## Appendix A: Follow-up questions', '',
+];
+
+// The recorded take, cut into the film: [film seconds, take from, take to, caption, small].
+let TL = null, TOTAL = 0, T_TERM = 20;
+const STAT = 4, END = 8;
+function buildTimeline() {
+	const m = window.TAKE.marks;
+	const segs = [];
+	let at = T_TERM;
+	const add = (len, from, to, caption, small = '', extra = {}) => { segs.push({ a: at, b: at + len, from, to, caption, small, ...extra }); at += len; };
+	// The camera looks at rows found in the take: the clicks, and the second question's answer.
+	const rowOf = (takeT, pattern) => {
+		const rows = frameAt(takeT).rows.map((runs) => runs.map((r) => r.text).join(''));
+		const i = rows.findIndex((r) => pattern.test(r));
+		return i === -1 ? 8 : i;
+	};
+	// Once sent, the question leaves the input box and heads the transcript.
+	const asked = rowOf(m.asked.t + 1.5, /^❯\s+\S/);
+	const lastRowOf = (takeT, pattern) => {
+		const rows = frameAt(takeT).rows.map((runs) => runs.map((r) => r.text).join(''));
+		const i = rows.findLastIndex((r) => pattern.test(r));
+		return i === -1 ? ROWS - 4 : i;
+	};
+	const composer1 = lastRowOf(m.asked.t, /^❯\s+\S/), composer2 = lastRowOf(m.asked2.t, /^❯\s+\S/);
+	const answer2 = rowOf(m.replied2.t + 0.5, /Which parts did I skip/);
+	// A click reaches the screen 0.6 to 2 s after it lands in a recorded take; the film cuts that
+	// wait, so each growth starts just after its click.
+	const changed = (takeT) => (window.TAKE.frames.find((f) => f.t > takeT)?.t ?? takeT) - 0.15;
+	add(m.asked.t - m.ready.t + 0.7, m.ready.t - 0.2, m.asked.t + 0.5, 'Ask Claude anything.', '', { focus: composer1 - 10, typing: true });
+	add(1.4, m.asked.t + 0.5, m.replied.t - 1.0, 'Ask Claude anything.', '', { fast: true, focus: asked + 4 });
+	add(2.6, m.replied.t - 1.0, m.open.t, 'Short by default.', '', { focus: m.open.row + 4 });
+	add(2.8, changed(m.open.t), changed(m.open.t) + 2.8, 'Click a phrase. It stretches in place.', '', { focus: m.open.row + 3, zoom: 1.5, growth: true });
+	add(0.6, m.nest.t - 0.6, m.nest.t, 'New words grow on both sides.', 'The words you already read stay where they are.', { focus: m.nest.row + 3, zoom: 1.5 });
+	add(2.8, changed(m.nest.t), changed(m.nest.t) + 2.8, 'New words grow on both sides.', 'The words you already read stay where they are.', { focus: m.nest.row + 3, zoom: 1.5, growth: true });
+	add(0.6, m.close.t - 0.6, m.close.t, 'Click « and it shrinks back.', '', { focus: m.close.row + 3, zoom: 1.5 });
+	add(2.2, changed(m.close.t), changed(m.close.t) + 2.2, 'Click « and it shrinks back.', '', { focus: m.close.row + 3, zoom: 1.5, growth: true });
+	add(3.1, m.asked2.t - 2.7, m.asked2.t + 0.4, 'And Claude knows what you skipped.', '', { focus: composer2 - 10, typing: true });
+	add(1.0, m.asked2.t + 0.4, m.replied2.t - 0.4, 'And Claude knows what you skipped.', '', { fast: true, focus: answer2 + 2 });
+	add(4.6, m.replied2.t - 0.4, m.replied2.t + 4.2, 'And Claude knows what you skipped.', '', { focus: answer2 + 3, zoom: 1.45 });
+	TL = { segs, end: at };
+	TOTAL = at + STAT + 5 + END;
+	window.TOTAL = TOTAL;
+	window.CLICKS = ['open', 'nest', 'close'].map((name) => filmTimeOf(m[name].t)).filter((x) => x !== null);
+	window.TYPING = segs.filter((s) => s.typing).map((s) => [s.a + 0.1, s.b - 0.6]);
+	window.CUES = { tTerm: T_TERM, tEnd: at, tTitle: at + STAT, pops: nelsonPops(), sections: { turn: 5, nelson: 8, quote: 14.5, never: 17 } };
+}
+function filmTimeOf(takeT) {
+	for (const s of TL.segs) if (takeT >= s.from && takeT <= s.to && !s.fast) return lerp(s.a, s.b, (takeT - s.from) / (s.to - s.from));
+	return null;
+}
+function frameAt(takeT) {
+	const f = window.TAKE.frames;
+	let lo = 0, hi = f.length - 1;
+	while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (f[mid].t <= takeT) lo = mid; else hi = mid - 1; }
+	return f[lo];
+}
+
+/**
+ * A recorded growth shows each distinct screen it captured for the same share of the first
+ * GROWTH seconds, whatever the gaps between captures were, then plays the rest of the take.
+ */
+const GROWTH = 1.1;
+function evenFrame(seg, local) {
+	seg.steps ??= window.TAKE.frames.filter((f) => f.t >= seg.from && f.t <= seg.from + 1.8);
+	if (seg.steps.length === 0 || local >= GROWTH) return frameAt(Math.max(seg.from + 1.8, lerp(seg.from, seg.to, local / (seg.b - seg.a))));
+	return seg.steps[Math.min(seg.steps.length - 1, Math.floor((local / GROWTH) * seg.steps.length))];
+}
+
+// --- drawing helpers -------------------------------------------------------------------------
+// The block elements as rectangles of a cell: [x, y, width, height] in fractions of the cell.
+const UL = [0, 0, .5, .5], UR = [.5, 0, .5, .5], LL = [0, .5, .5, .5], LR = [.5, .5, .5, .5];
+const QUADS = {
+	'█': [[0, 0, 1, 1]], '▀': [[0, 0, 1, .5]], '▄': [[0, .5, 1, .5]], '▌': [[0, 0, .5, 1]], '▐': [[.5, 0, .5, 1]],
+	'▘': [UL], '▝': [UR], '▖': [LL], '▗': [LR], '▚': [UL, LR], '▞': [UR, LL],
+	'▛': [UL, UR, LL], '▜': [UL, UR, LR], '▙': [UL, LL, LR], '▟': [UR, LL, LR],
+};
+let shownFrame = null;
+function drawRows(frame) {
+	if (frame === shownFrame) return;
+	shownFrame = frame;
+	const host = $('rows');
+	host.innerHTML = '';
+	frame.rows.forEach((runs, r) => {
+		const row = document.createElement('div');
+		row.className = 'row';
+		row.style.top = `${r * CELL_H}px`;
+		for (const run of runs) {
+			// Block characters are cell shapes, as a terminal draws them, not glyphs a font leaves gaps around.
+			if ([...run.text].some((ch) => QUADS[ch] !== undefined)) {
+				let col = run.col;
+				for (const ch of run.text) {
+					const quads = QUADS[ch];
+					if (quads !== undefined) {
+						for (const [qx, qy, qw, qh] of quads) {
+							const b = document.createElement('i');
+							b.style.cssText = `position:absolute;left:${(col + qx) * CELL_W}px;top:${qy * CELL_H}px;width:${qw * CELL_W + 1.2}px;height:${qh * CELL_H + 1.2}px;background:${run.fg ?? 'var(--term-fg)'}`;
+							row.appendChild(b);
+						}
+					} else if (ch !== ' ') {
+						const g = document.createElement('span');
+						g.textContent = ch;
+						g.style.left = `${col * CELL_W}px`;
+						g.style.color = run.fg ?? 'var(--term-fg)';
+						row.appendChild(g);
+					}
+					col += 1;
+				}
+				continue;
+			}
+			const s = document.createElement('span');
+			s.textContent = run.text;
+			s.style.left = `${run.col * CELL_W}px`;
+			let fg = run.fg ?? 'var(--term-fg)', bg = run.bg;
+			if (run.inverse) [fg, bg] = [bg ?? 'var(--term)', run.fg ?? 'var(--term-fg)'];
+			s.style.color = fg;
+			if (bg) s.style.background = bg;
+			if (run.bold) s.style.fontWeight = '700';
+			if (run.dim) s.style.opacity = '.55';
+			if (run.italic) s.style.fontStyle = 'italic';
+			if (run.underline) s.style.textDecoration = 'underline';
+			row.appendChild(s);
+		}
+		host.appendChild(row);
+	});
+}
+const TERM_W = COLS * CELL_W + 36, TERM_H = ROWS * CELL_H + 46 + 32;
+function placeTerm(zoom, focusRow, lift = 0) {
+	const fit = Math.min((W - 160) / TERM_W, (H - 230) / TERM_H);
+	const s = fit * zoom;
+	const cx = W / 2, cy = 190 + (H - 190) / 2 + lift;
+	const fy = 46 + 14 + focusRow * CELL_H;
+	const x = cx - (TERM_W / 2) * s;
+	const y = zoom > 1 ? cy - fy * s : cy - (TERM_H / 2) * s;
+	$('term-wrap').style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+	return { x, y, s };
+}
+function cellToScreen(cam, row, col) {
+	return { x: cam.x + (18 + (col + 0.5) * CELL_W) * cam.s, y: cam.y + (46 + 14 + (row + 0.6) * CELL_H) * cam.s };
+}
+
+const SPRITE = {
+	idle: ['..XXXXXXXXXX..', '..XXKXXXXKXX..', '..XXKXXXXKXX..', 'XXXXXXXXXXXXXX', '..XXXXXXXXXX..', '..XXXXXXXXXX..', '..X.X....X.X..', '..X.X....X.X..'],
+	walk: ['..XXXXXXXXXX..', '..XXKXXXXKXX..', '..XXKXXXXKXX..', 'XXXXXXXXXXXXXX', '..XXXXXXXXXX..', '..XXXXXXXXXX..', '...X.X..X.X...', '...X.X..X.X...'],
+	blink: ['..XXXXXXXXXX..', '..XXXXXXXXXX..', '..XXKXXXXKXX..', 'XXXXXXXXXXXXXX', '..XXXXXXXXXX..', '..XXXXXXXXXX..', '..X.X....X.X..', '..X.X....X.X..'],
+	wave: ['..XXXXXXXXXX.X', '..XXKXXXXKXX.X', '..XXKXXXXKXXXX', 'XXXXXXXXXXXX..', '..XXXXXXXXXX..', '..XXXXXXXXXX..', '..X.X....X.X..', '..X.X....X.X..'],
+	sweat: ['..XXXXXXXXXX.B', '..XXKXXXXKXX..', '..XXKXXXXKXX..', 'XXXXXXXXXXXXXX', '..XXXXXXXXXX..', '..XXXXXXXXXX..', '..X.X....X.X..', '..X.X....X.X..'],
+};
+function drawClawd(c) {
+	const el = $('clawd');
+	if (!c) { el.style.opacity = 0; return; }
+	const ctx = el.getContext('2d');
+	ctx.clearRect(0, 0, 14, 8);
+	SPRITE[c.pose].forEach((line, y) => [...line].forEach((p, x) => {
+		if (p === '.') return;
+		ctx.fillStyle = p === 'K' ? '#1f1e1b' : p === 'B' ? '#6cb4ee' : '#d97757';
+		ctx.fillRect(x, y, 1, 1);
+	}));
+	el.style.opacity = c.alpha ?? 1;
+	el.style.width = `${14 * c.px}px`;
+	el.style.height = `${8 * c.px}px`;
+	el.style.transform = `translate(${c.x}px, ${c.y}px) scaleX(${c.flip ? -1 : 1}) rotate(${c.rot ?? 0}deg)`;
+}
+function bubble(text, x, y, alpha) {
+	const b = $('bubble');
+	b.textContent = text;
+	b.style.opacity = alpha;
+	b.style.transform = `translate(${x}px, ${y}px)`;
+}
+function show(id, alpha) { $(id).style.opacity = alpha; }
+function card(html, cls = '') {
+	const c = $('card');
+	if (c.dataset.html !== html) { c.dataset.html = html; c.innerHTML = html; }
+	c.className = `layer ${cls}`;
+}
+
+// --- scenes ---------------------------------------------------------------------------------
+function hook(t) {
+	// 0-5 s: a reply that keeps going while Clawd beams beside it.
+	show('termlayer', 1);
+	const lines = WALL.concat(WALL).map((l) => [{ text: l, col: 2, fg: l.startsWith('#') ? '#e8a87c' : null, bold: l.startsWith('#') }]);
+	const scroll = Math.max(0, (t - 0.4) * 9);
+	const first = Math.floor(scroll);
+	const rows = [[{ text: '❯ is it fine to name a variable `data`?', col: 0, fg: '#bdb7ac' }], [], [{ text: '⏺ ', col: 0, fg: '#e8e5de' }, ...(lines[first]?.slice(0, 1).map((r) => ({ ...r, col: 2 })) ?? [])]];
+	for (let i = 1; i < ROWS - 3; i++) rows.push(lines[(first + i) % lines.length]);
+	drawRows({ rows });
+	placeTerm(1, 0, 40);
+	$('caption').innerHTML = `${COPY.hookTitle}<small style="opacity:${ease(span(t, 2.4, 2.8))}">${COPY.hookSmall}</small>`;
+	$('caption').style.opacity = clamp((t - 0.5) * 3);
+	const bob = Math.round(Math.sin(t * 9) * 2) * 6;
+	drawClawd({ pose: t > 3.4 ? 'sweat' : Math.floor(t * 3) % 7 === 0 ? 'blink' : 'idle', x: 1580, y: 900 + bob, px: 14 });
+	show('fade', span(t, 4.4, 5));
+}
+const loads = [];
+function setImage(target, src) {
+	const img = typeof target === 'string' ? $(target) : target;
+	if (img.getAttribute('src') === src) return;
+	img.setAttribute('src', src);
+	loads.push(img.decode().catch(() => {}));
+}
+function turn(t) {
+	// 5-8 s: the idea is older than the web. Archive pictures when the assets are present.
+	const A = window.ARCHIVE;
+	if (!A) {
+		show('card', 1);
+		card(`<div class="big">${COPY.turn1}</div><div class="small" style="opacity:${ease(span(t, 0.8, 1.2))}">${COPY.turn1small}</div>`);
+		show('fade', 1 - span(t, 0, 0.5) + span(t, 2.6, 3));
+		return;
+	}
+	show('archive', 1);
+	setImage('arcA', A.console);
+	const b = A.fress ? A.fress[Math.min(A.fress.length - 1, Math.floor(Math.max(0, t - 1.5) * 30))] : A.closeup;
+	setImage('arcB', b);
+	$('arcA').style.transform = `scale(${lerp(1.02, 1.16, ease(span(t, 0, 1.8)))}) translate(${lerp(0, -40, ease(span(t, 0, 1.8)))}px, ${lerp(0, -20, ease(span(t, 0, 1.8)))}px)`;
+	$('arcB').style.transform = `scale(${lerp(1.04, 1.12, span(t, 1.4, 3))})`;
+	$('arcB').style.filter = A.fress ? 'sepia(.25) contrast(1.05)' : '';
+	$('arcB').style.opacity = ease(span(t, 1.4, 1.8));
+	const over = $('archive').querySelector('.over');
+	over.querySelector('.big').textContent = COPY.turn1;
+	over.querySelector('.big').style.opacity = ease(span(t, 0.2, 0.7));
+	over.querySelector('.small').textContent = A.fress ? COPY.fressLine : COPY.archiveLine;
+	over.querySelector('.small').style.opacity = ease(span(t, 1.5, 1.9));
+	$('archive').querySelector('.credit').textContent = t < 1.6 || !A.fress ? COPY.archiveCredit : COPY.fressCredit;
+	show('fade', 1 - span(t, 0, 0.5) + span(t, 2.6, 3));
+}
+// Nelson's own sentences, stretched the way his 1970 article describes: "Gaps appear between
+// phrases; new words and phrases pop into the gaps, an item at a time." The sentence stays real
+// flowing text: each new word, set heavier as in Dream Machines, opens from no width to its own,
+// so the browser reflows the line every frame and the words already there are pushed along.
+const bareWord = (w) => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '').toLowerCase();
+const PLANS = new Map();
+/** The words of both sentences in reading order: kept (anchor), new (long only) or old (short only). */
+function planOf(short, long) {
+	if (PLANS.has(long)) return PLANS.get(long);
+	const units = (text) => text.match(/\S+\s*/g) ?? [];
+	const S = units(short), L = units(long);
+	const a = S.map(bareWord), b = L.map(bareWord);
+	const n = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+	for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) n[i][j] = a[i] === b[j] ? n[i + 1][j + 1] + 1 : Math.max(n[i + 1][j], n[i][j + 1]);
+	const plan = [];
+	let i = 0, j = 0;
+	while (i < a.length || j < b.length) {
+		if (i < a.length && j < b.length && a[i] === b[j]) { plan.push({ kind: 'kept', text: L[j] }); i++; j++; }
+		else if (j < b.length && (i >= a.length || n[i][j + 1] >= n[i + 1][j])) { plan.push({ kind: 'new', text: L[j] }); j++; }
+		else { plan.push({ kind: 'old', text: S[i] }); i++; }
+	}
+	// A new word's turn: 1 beside a kept word, more the further it sits from every kept word.
+	plan.forEach((u, k) => {
+		if (u.kind !== 'new') return;
+		let d = 1;
+		while (plan[k - d]?.kind !== 'kept' && plan[k + d]?.kind !== 'kept' && (k - d >= 0 || k + d < plan.length)) d++;
+		u.turn = d;
+	});
+	const m = $('measure');
+	for (const u of plan) {
+		const el = document.createElement('span');
+		el.textContent = u.text;
+		el.style.fontWeight = u.kind === 'new' ? '700' : '400';
+		m.appendChild(el);
+		u.width = el.getBoundingClientRect().width;
+		m.removeChild(el);
+	}
+	PLANS.set(long, plan);
+	return plan;
+}
+function drawStretch1967(short, long, p) {
+	const host = $('nelson');
+	if (p <= 0) { host.textContent = short; return; }
+	const plan = planOf(short, long);
+	const last = Math.max(1, ...plan.map((u) => u.turn ?? 0));
+	host.innerHTML = plan.map((u) => {
+		if (u.kind === 'kept') return `<span class="kept">${u.text}</span>`;
+		const q = u.kind === 'old' ? 1 - ease(clamp(p / 0.3)) : ease(clamp((p - 0.6 * ((u.turn - 1) / last)) / 0.4));
+		if (q <= 0) return '';
+		return `<span class="${u.kind === 'new' ? 'new' : 'old'}" style="width:${(u.width * q).toFixed(2)}px;opacity:${q.toFixed(3)}">${u.text}</span>`;
+	}).join('');
+}
+/** How far Nelson's sentence has stretched at scene time t: [short, long, progress]. */
+function nelsonAt(t) {
+	if (t < 4.1) return [...COPY.nelson[0], t < 0.8 ? 0 : t < 2.7 ? span(t, 0.8, 2.7) : t < 3.1 ? 1 : 1 - span(t, 3.1, 4.0)];
+	return [...COPY.nelson[1], t < 4.4 ? 0 : span(t, 4.4, 6.1)];
+}
+function nelson(t) {
+	// 7-13.5 s: Nelson's sentence stretches and shrinks as the throttle moves.
+	show('paper', 1);
+	const p = $('paper');
+	p.querySelector('.year').textContent = COPY.year;
+	p.querySelector('.who').textContent = COPY.who;
+	p.querySelector('.line').textContent = '';
+	p.querySelector('.note').textContent = t > 1 ? COPY.nelsonNote : '';
+	p.querySelector('.portrait').style.opacity = 0;
+	p.querySelector('.portrait-credit').textContent = '';
+	const [short, long, k] = nelsonAt(t);
+	drawStretch1967(short, long, k);
+	$('throttle').style.opacity = 1;
+	$('throttle').querySelector('.knob').style.top = `${lerp(386, 0, ease(k))}px`;
+	show('fade', 1 - span(t, 0, 0.4));
+}
+/** Film times at which a new word of Nelson's sentence is half open, for the score. */
+function nelsonPops() {
+	const pops = [];
+	for (const [short, long, t0, t1] of [[...COPY.nelson[0], 0.8, 2.7], [...COPY.nelson[1], 4.4, 6.1]]) {
+		const plan = planOf(short, long);
+		const last = Math.max(1, ...plan.map((u) => u.turn ?? 0));
+		const seen = new Set();
+		for (let t = t0; t <= t1; t += 1 / 120) {
+			const p = span(t, t0, t1);
+			plan.forEach((u, k) => {
+				if (u.kind !== 'new' || seen.has(k)) return;
+				if (ease(clamp((p - 0.6 * ((u.turn - 1) / last)) / 0.4)) >= 0.5) { seen.add(k); pops.push(8 + t); }
+			});
+		}
+	}
+	return pops;
+}
+function quote(t) {
+	// 13.5-16 s: Nelson describing the very motion just shown.
+	show('paper', 1);
+	const p = $('paper');
+	p.querySelector('.year').textContent = '';
+	p.querySelector('.who').textContent = '';
+	p.querySelector('.note').textContent = '';
+	$('nelson').innerHTML = '';
+	$('throttle').style.opacity = 0;
+	const portrait = p.querySelector('.portrait');
+	if (window.ARCHIVE) setImage(portrait, window.ARCHIVE.nelson);
+	portrait.style.opacity = window.ARCHIVE ? ease(span(t, 0.2, 0.6)) : 0;
+	p.querySelector('.portrait-credit').textContent = window.ARCHIVE ? COPY.portraitCredit : '';
+	const shown = Math.floor(COPY.quote.length * clamp(t / 1.4));
+	p.querySelector('.line').innerHTML = `${COPY.quote.slice(0, shown)}${t > 1.6 ? `<div style="margin-top:36px;font-size:30px;opacity:.8">— ${COPY.quoteBy}</div>` : ''}`;
+	show('fade', span(t, 2.1, 2.5));
+}
+function never(t) {
+	// 16-19 s: it never caught on; Clawd walks in.
+	show('card', 1);
+	card(`<div class="big">${COPY.never}</div><div class="small" style="opacity:${ease(span(t, 0.7, 1.1))}">${COPY.neverSmall}</div>`);
+	const walkIn = ease(span(t, 1.4, 2.4));
+	const x = lerp(W + 40, 1500, walkIn);
+	drawClawd({ pose: walkIn < 1 ? (Math.floor(t * 8) % 2 ? 'walk' : 'idle') : 'wave', x, y: 780, px: 14 });
+	bubble(COPY.clawdSays, x - 210, 680, span(t, 2.4, 2.55));
+	show('fade', 1 - span(t, 0, 0.4) + span(t, 2.7, 3));
+}
+function terminal(t) {
+	show('termlayer', 1);
+	bubble('', 0, 0, 0);
+	const seg = TL.segs.find((s) => t >= s.a && t < s.b) ?? TL.segs.at(-1);
+	const k = clamp((t - seg.a) / (seg.b - seg.a));
+	drawRows(seg.growth ? evenFrame(seg, t - seg.a) : frameAt(lerp(seg.from, seg.to, k)));
+	// The camera follows the rows that matter, closer in while the reply stretches.
+	const i = TL.segs.indexOf(seg);
+	const before = TL.segs[i - 1] ?? seg;
+	const blend = ease(span(t, seg.a, seg.a + 0.6));
+	const cam = placeTerm(lerp(before.zoom ?? 1.3, seg.zoom ?? 1.3, blend), lerp(before.focus, seg.focus, blend));
+	$('caption').innerHTML = `${seg.caption}<small>${seg.small || '&nbsp;'}</small>`;
+	$('caption').style.opacity = 1;
+	// The pointer travels to each click the take made, and rings where it lands.
+	const m = window.TAKE.marks;
+	const clicks = ['open', 'nest', 'close'].map((name) => ({ at: filmTimeOf(m[name].t), ...m[name] })).filter((c) => c.at !== null);
+	const next = clicks.find((c) => t <= c.at + 0.35);
+	const prev = [...clicks].reverse().find((c) => t > c.at + 0.35);
+	if (next && t > next.at - 1.3) {
+		const to = cellToScreen(cam, next.row, next.col);
+		const from = prev ? cellToScreen(cam, prev.row, prev.col) : { x: W - 260, y: H - 120 };
+		const k2 = ease(span(t, next.at - 1.1, next.at - 0.1));
+		$('pointer').style.opacity = 1;
+		$('pointer').style.transform = `translate(${lerp(from.x, to.x, k2) - 6}px, ${lerp(from.y, to.y, k2) - 4}px)`;
+		const r = span(t, next.at, next.at + 0.35);
+		$('ring').style.opacity = r > 0 && r < 1 ? 1 - r : 0;
+		$('ring').style.transform = `translate(${to.x}px, ${to.y}px) scale(${0.4 + r})`;
+	} else {
+		$('pointer').style.opacity = 0;
+		$('ring').style.opacity = 0;
+	}
+	drawClawd(null);
+	show('fade', 1 - span(t, T_TERM, T_TERM + 0.4) + span(t, TL.end - 0.4, TL.end));
+}
+// The benchmark card's reply: four paragraphs of 24 lines that fold into their four first lines,
+// about the 17% of a reply the benchmark found you read by default. Each first line keeps a
+// linked phrase, [left, width] as fractions of the line.
+const PHRASES = [[0.2, 0.32], [0, 0.46], [0.38, 0.4], [0.12, 0.5]];
+const FOLD = [6, 7, 6, 5].flatMap((n, para) => Array.from({ length: n }, (_, i) => ({ para, first: i === 0, last: i === n - 1 })))
+	.map((line, i) => ({ ...line, y: i * 24 + line.para * 22, w: line.last ? 0.42 + (i % 3) * 0.12 : 0.86 + ((i * 7) % 5) * 0.035 }));
+function stat(t) {
+	// The benchmark's headline, after the take and before the launch card.
+	show('card', 1);
+	card(`<div class="fold"><div class="reply">${FOLD.map(() => '<i><b></b></i>').join('')}</div><div class="claim"><div class="big"></div><div class="small"></div></div></div>`);
+	// The panel shrinks with its text, so the skim is as small on screen as it is to read.
+	const k = ease(span(t, 0.9, 1.9));
+	$('card').querySelector('.reply').style.height = `${lerp(642, 3 * 46 + 11, k)}px`;
+	$('card').querySelectorAll('.reply i').forEach((el, i) => {
+		const line = FOLD[i];
+		const [left, width] = PHRASES[line.para];
+		el.style.top = `${40 + lerp(line.y, line.para * 46, k)}px`;
+		el.style.width = `${lerp(line.w, line.first ? 0.94 : line.w, k) * 520}px`;
+		el.style.opacity = line.first ? 1 : 1 - span(k, 0, 0.8);
+		el.firstChild.style.left = `${left * 100}%`;
+		el.firstChild.style.width = line.first ? `${width * 100}%` : '0';
+		el.firstChild.style.opacity = line.first ? k : 0;
+	});
+	const claim = $('card').querySelector('.claim');
+	claim.firstChild.textContent = COPY.statBig;
+	claim.firstChild.style.opacity = ease(span(t, 1.5, 2.0));
+	claim.lastChild.textContent = COPY.statSmall;
+	claim.lastChild.style.opacity = ease(span(t, 2.2, 2.6));
+	show('fade', 1 - span(t, 0, 0.4) + span(t, STAT - 0.3, STAT));
+}
+function title(t) {
+	// The launch card, played straight.
+	show('card', 1);
+	card(`<div class="kicker">${COPY.productKicker}</div><div class="big">${COPY.product}</div><div class="small">${COPY.tagline}</div><div class="fine">${COPY.lineage}</div>`);
+	drawClawd(null);
+	show('fade', 1 - span(t, 0, 0.5));
+}
+function parody(t) {
+	// The straight face breaks: Clawd tips the title over and the card turns into a cartridge
+	// that says what to type, one step at a time.
+	const walk = ease(span(t, 0, 1.2));
+	if (t < 1.6) {
+		show('card', 1);
+		card(`<div class="kicker">${COPY.productKicker}</div><div class="big" style="transform: rotate(${lerp(0, 9, ease(span(t, 1.15, 1.5)))}deg) translateY(${lerp(0, 260, ease(span(t, 1.2, 1.6)))}px)">${COPY.product}</div><div class="small">${COPY.tagline}</div><div class="fine">${COPY.lineage}</div>`);
+		drawClawd({ pose: Math.floor(t * 8) % 2 ? 'walk' : 'idle', x: lerp(-200, 560, walk), y: 330, px: 14 });
+	} else {
+		show('card', 1);
+		const steps = COPY.howSteps.map((step, i) => `<li style="opacity:${t > 2.2 + i * 0.5 ? 1 : 0}"><span>${i + 1}</span>${step}</li>`).join('');
+		card(`<div class="big">${COPY.howTo}</div><ol>${steps}</ol><div class="repo" style="opacity:${t > 3.9 ? 1 : 0}">${COPY.repo}</div><div class="fine" style="opacity:${t > 4.3 ? 1 : 0}">${COPY.parodyFine}<br>${window.ARCHIVE ? `${COPY.parodyCredits}${window.ARCHIVE.fress ? ` Film: ${COPY.fressCredit}.` : ''}` : ''}</div>`, 'chip');
+		drawClawd({ pose: Math.floor(t * 2) % 2 ? 'wave' : 'idle', x: W / 2 - 98, y: 170 + Math.round(Math.sin(t * 6) * 2) * 7, px: 14 });
+	}
+	show('flash', t > 1.55 && t < 1.75 ? 1 - span(t, 1.55, 1.75) : 0);
+	show('fade', span(t, END - 0.5, END));
+}
+
+window.setState = async ({ t }) => {
+	if (!TL) buildTimeline();
+	for (const id of ['card', 'paper', 'termlayer', 'archive']) show(id, 0);
+	loads.length = 0;
+	drawClawd(null);
+	show('flash', 0);
+	$('pointer').style.opacity = 0;
+	$('ring').style.opacity = 0;
+	bubble('', 0, 0, 0);
+	if (t < 5) hook(t);
+	else if (t < 8) turn(t - 5);
+	else if (t < 14.5) nelson(t - 8);
+	else if (t < 17) quote(t - 14.5);
+	else if (t < T_TERM) never(t - 17);
+	else if (t < TL.end) terminal(t);
+	else if (t < TL.end + STAT) stat(t - TL.end);
+	else if (t < TL.end + STAT + 5) title(t - TL.end - STAT);
+	else parody(t - TL.end - STAT - 5);
+	await Promise.all(loads);
+	await document.fonts.ready;
+	await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+};
+</script>

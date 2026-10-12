@@ -1,0 +1,12 @@
+# Written by Claude Code each time it loads the plugin from this folder
+.claude-plugin/types/
+/tsconfig.json
+# Film renders
+film/out/
+node_modules/
+.DS_Store
+# deep-research run artifacts
+.research/
+bench/out/
+# Session records a local hook writes into any folder Claude Code runs in
+.claude/data/
