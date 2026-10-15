@@ -278,6 +278,14 @@ describe('desktop app', () => {
     await ui.unmount()
   })
 
+  test('a short form written over several lines is drawn open, as a link cannot span them', async $ => {
+    const list = ['{{- Admin: https://admin.example.com', '- `example.com` is a test address.|}}'].join('\n')
+    const listed = ['{{- one', '- two|- one, first', '- two, second}}'].join('\n')
+    const ui = await mountReply($, FULLSCREEN, `${list}\n\n${listed}`, 'desktop')
+    expect(await shown(ui)).toBe(['- Admin: https://admin.example.com', '- `example.com` is a test address.', '', '- one, first', '- two, second'].join('\n'))
+    await ui.unmount()
+  })
+
   test('what the reader opened is told to the model with the next prompt', async ($, on) => {
     on('session.messages', () => ({
       value: [

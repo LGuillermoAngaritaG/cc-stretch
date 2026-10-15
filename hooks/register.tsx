@@ -184,6 +184,9 @@ function linkedMarkdown(parts: Segment[], open: readonly string[], links: string
     .map(part => {
       if (typeof part === 'string') return part
       if (!isOpenable(part) || part.long === undefined) return part.short
+      // A markdown link cannot span lines, so a short form written over several is drawn open, or
+      // as written when its long form is empty.
+      if (part.short.includes('\n')) return part.long.length === 0 ? part.short : linkedMarkdown(part.long, open, links)
       if (open.includes(part.key)) {
         const close = `${HREF}close/${encodeURIComponent(part.key)}`
         links.push(close)
